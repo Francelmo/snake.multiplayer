@@ -1,36 +1,111 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🐍 Snake Game - Clássico & Multiplayer Local
 
-## Getting Started
+Este é um projeto interativo do jogo da **Cobrinha (Snake)** com **dois modos de jogo**:
 
-First, run the development server:
+- **Clássico:** o tradicional modo single player onde o objetivo é comer o máximo de frutas sem bater nas paredes ou em si mesmo.  
+- **Multiplayer Local:** jogue com um amigo no mesmo teclado, competindo para ver quem sobrevive e pontua mais!
+
+Desenvolvido com **Next.js** e estilizado com **Tailwind CSS**, o projeto traz uma interface moderna, responsiva e uma jogabilidade fluida.
+
+---
+
+## 🚀 Demonstração
+[Snake Multiplayer no Vercel](https://snake-multiplayer.vercel.app)
+
+---
+
+## ✨ Funcionalidades
+
+🎮 **Dois modos de jogo**
+- 🧍‍♂️ **Modo Clássico:** jogue sozinho e desafie seu próprio recorde.  
+- 👥 **Modo Multiplayer Local:** dois jogadores controlando cobras diferentes simultaneamente.
+
+⚙️ **Configurações personalizáveis**
+- Ajuste de velocidade e tamanho inicial.
+- Escolha de cores ou temas para as cobras.
+
+💾 **Persistência de dados**
+- Armazenamento de placares e configurações no `localStorage`.
+
+📊 **Placar em tempo real**
+- Exibe pontuações e status dos jogadores durante a partida.
+
+🧠 **Lógica separada por módulos**
+- `gameLogic.ts`: controle da movimentação, colisões e pontuação.  
+- `aiLogic.ts`: suporte para lógica de oponentes (IA) e futuros modos automáticos.  
+- `storage.ts`: manipulação de dados persistentes.  
+- `utils.ts`: funções auxiliares de controle e desenho.
+
+💬 **Interface interativa**
+- `GameCanvas.tsx`: canvas principal do jogo.  
+- `GameControls.tsx`: botões e comandos de jogo.  
+- `Scoreboard.tsx`: exibição dos placares.  
+- `SettingsDialog.tsx` e `InfoDialog.tsx`: modais para configuração e instruções.  
+- `GamePopup.tsx`: tela de início e fim de partida.
+
+---
+
+## 📦 Tecnologias
+
+- **Next.js** (React + SSR)
+- **TypeScript**
+- **Tailwind CSS**
+- **LocalStorage** (para salvar configurações e placares)
+- **Vercel** (para deploy)
+
+---
+
+## 🧪 Scripts
 
 ```bash
+# Instalar dependências
+npm install
+
+# Rodar localmente
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Build para produção
+npm run build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🕹️ Controles
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Jogador 1:
+⬆️ ⬇️ ⬅️ ➡️ — movimentação
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Jogador 2:
+W A S D — movimentação
 
-## Learn More
+## 💡 Estrutura de pastas
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+src/
+├── app/
+│   ├── favicon.ico
+│   ├── globals.css
+│   ├── layout.tsx
+│   └── page.tsx
+│
+├── components/
+│   ├── GameCanvas.tsx
+│   ├── GameControls.tsx
+│   ├── GamePopup.tsx
+│   ├── InfoDialog.tsx
+│   ├── Scoreboard.tsx
+│   ├── SettingsDialog.tsx
+│   └── ui/
+│       ├── button.tsx
+│       └── dialog.tsx
+│
+└── lib/
+    ├── aiLogic.ts
+    ├── gameLogic.ts
+    ├── storage.ts
+    └── utils.ts
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🧠 Futuras melhorias
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- 💻 Adicionar modo online multiplayer.
+- 🎨 Customização de temas e skins.
+- 📱 Suporte total para mobile (controles por toque).
