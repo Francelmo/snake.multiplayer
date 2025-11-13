@@ -4,11 +4,15 @@ export interface Position {
   y: number;
 }
 
-// Função auxiliar para verificar se uma posição é válida
-const isSafe = (pos: Position, snakeBody: Position[], gridSize: number): boolean =>
-  pos.x >= 0 && pos.x < gridSize && pos.y >= 0 && pos.y < gridSize && !snakeBody.some((p) => p.x === pos.x && p.y === pos.y);
+// Mapeamento de direção oposta
+export const opposite: Record<Direction, Direction> = {
+  UP: "DOWN",
+  DOWN: "UP",
+  LEFT: "RIGHT",
+  RIGHT: "LEFT",
+};
 
-// Função auxiliar para prever a próxima posição de acordo com a direção
+// Próxima posição baseado na direção
 const nextPos = (pos: Position, dir: Direction): Position => {
   switch (dir) {
     case "UP": return { x: pos.x, y: pos.y - 1 };
@@ -18,7 +22,21 @@ const nextPos = (pos: Position, dir: Direction): Position => {
   }
 };
 
-// Função para calcular o espaço livre ao redor de uma posição
+// Verifica se a posição é segura (próprio corpo + adversário)
+const isSafe = (
+  pos: Position,
+  snakeBody: Position[],
+  opponentBody: Position[],
+  gridSize: number
+): boolean =>
+  pos.x >= 0 &&
+  pos.x < gridSize &&
+  pos.y >= 0 &&
+  pos.y < gridSize &&
+  !snakeBody.some(p => p.x === pos.x && p.y === pos.y) &&
+  !opponentBody.some(p => p.x === pos.x && p.y === pos.y);
+
+// Calcula espaço livre ao redor (flood fill)
 const freeSpace = (start: Position, snakeBody: Position[], gridSize: number): number => {
   const visited = new Set<string>();
   const queue: Position[] = [start];
@@ -28,21 +46,19 @@ const freeSpace = (start: Position, snakeBody: Position[], gridSize: number): nu
     const p = queue.shift()!;
     const key = `${p.x},${p.y}`;
 
-    // Verifica se a posição é segura e não foi visitada
-    if (visited.has(key) || !isSafe(p, snakeBody, gridSize)) continue;
+    if (visited.has(key) || !isSafe(p, snakeBody, [], gridSize)) continue;
     visited.add(key);
     count++;
 
-    // Adiciona as posições adjacentes à fila
     ["UP", "DOWN", "LEFT", "RIGHT"].forEach((dir) =>
       queue.push(nextPos(p, dir as Direction))
     );
   }
 
-  return count;  // Retorna o número de células livres ao redor da posição inicial
+  return count;
 };
 
-// Função de IA Super avançada
+// Função da IA super avançada
 export const computeSuperAIMove = (
   snake: Position[],
   food: Position,
@@ -53,54 +69,45 @@ export const computeSuperAIMove = (
 ): Direction => {
   const head = snake[0];
 
-  // Função auxiliar para prever a próxima posição do jogador adversário
+  // Prever próximo movimento do jogador
   const predictPlayerMove = (dir: Direction): Position => {
-    const playerHead = opponent[0];
-    return nextPos(playerHead, dir);
+    return nextPos(opponent[0], dir);
   };
 
-  // Função de avaliação do movimento
   const evaluateMove = (dir: Direction): number => {
+    const pos = nextPos(head, dir);
+    const tempSnake = [pos, ...snake.slice(0, -1)];
+    const combinedBody = [...tempSnake, ...opponent];
+
     let score = 0;
-    let pos = nextPos(head, dir);
-    let tempSnake = [pos, ...snake.slice(0, -1)];
 
-    // Fuga estratégica: evita ficar perto do oponente
-    const opponentHeadNext = predictPlayerMove(opponentDir);
-    const distToOpponent = Math.abs(pos.x - opponentHeadNext.x) + Math.abs(pos.y - opponentHeadNext.y);
-    if (distToOpponent <= 2) score -= 100; // Penalidade maior se o oponente estiver muito perto
+    // Evitar se aproximar demais do jogador
+    const opponentNext = predictPlayerMove(opponentDir);
+    const distToOpponent = Math.abs(pos.x - opponentNext.x) + Math.abs(pos.y - opponentNext.y);
+    if (distToOpponent <= 2) score -= 200; // Penalidade maior se muito perto
 
-    // **Prioridade pela comida**: A IA agora deve realmente priorizar a comida.
+    // Prioridade comida
     const distFood = Math.abs(pos.x - food.x) + Math.abs(pos.y - food.y);
-    score -= distFood * 2;  // A distância para a comida tem um peso maior (prioridade mais alta)
+    score -= distFood * 3; // Peso maior para comida
 
-    // Avaliar se há um bom espaço livre para manobra
-    const space = freeSpace(pos, tempSnake, gridSize);
-    score += space * 1.2; // Peso do espaço livre um pouco mais alto para maior mobilidade
+    // Espaço livre
+    const space = freeSpace(pos, combinedBody, gridSize);
+    score += space * 2; // Peso alto para mobilidade
 
-    // A IA pode tentar perseguir o jogador (de forma mais agressiva)
+    // Distância estratégica para perseguir jogador
     const distToPlayer = Math.abs(pos.x - opponent[0].x) + Math.abs(pos.y - opponent[0].y);
-    if (distToPlayer > 3 && distToPlayer < 6) score += 50;  // Peso leve se estiver distante o suficiente
+    if (distToPlayer > 3 && distToPlayer < 6) score += 30;
 
     return score;
   };
 
   const possibleDirs: Direction[] = ["UP", "DOWN", "LEFT", "RIGHT"];
   const safeDirs = possibleDirs.filter(
-    (dir) => dir !== opposite[currentDir] && isSafe(nextPos(head, dir), snake, gridSize)
+    dir => dir !== opposite[currentDir] && isSafe(nextPos(head, dir), snake, opponent, gridSize)
   );
 
-  if (safeDirs.length === 0) return currentDir;
+  if (safeDirs.length === 0) return currentDir; // Sem saída, mantém direção
 
-  // Ordena os movimentos possíveis pela avaliação de cada movimento
   safeDirs.sort((a, b) => evaluateMove(b) - evaluateMove(a));
-  return safeDirs[0];
-};
-
-// Mapeamento de direção oposta para evitar 180 graus de virada
-export const opposite: Record<Direction, Direction> = {
-  UP: "DOWN",
-  DOWN: "UP",
-  LEFT: "RIGHT",
-  RIGHT: "LEFT",
+  return safeDirs[0]; // Melhor movimento
 };

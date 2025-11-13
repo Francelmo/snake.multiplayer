@@ -39,6 +39,12 @@ export default function GameCanvas({
   const [winner, setWinner] = useState<string | null>(null);
   const [ranking, setRanking] = useState<{ name: string; score: number }[]>([]);
 
+  // Refs para controlar bloqueio de input
+  const dir1Ref = useRef(dir1);
+  const dir2Ref = useRef(dir2);
+  const dir1Locked = useRef(false);
+  const dir2Locked = useRef(false);
+
   // Ranking local
   useEffect(() => {
     const saved = localStorage.getItem("snakeRanking");
@@ -62,36 +68,43 @@ export default function GameCanvas({
   // Controles teclado
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-    if (gameState === "ready") setGameState("playing");
+      if (gameState === "ready") setGameState("playing");
 
-    // Tecla Enter reinicia o jogo se estiver gameover
-    if (e.key === "Enter" && gameState === "gameover") {
-      resetGame();
-    }
+      if (e.key === "Enter" && gameState === "gameover") {
+        resetGame();
+      }
 
-    // Jogador 1 (setas) -> sempre ativo
-    const keys1 = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
-    if (keys1.includes(e.key)) {
-      const dir = e.key.replace("Arrow", "").toUpperCase() as "UP" | "DOWN" | "LEFT" | "RIGHT";
-      if (dir !== opposite[dir1]) setDir1(dir);
-    }
+      // Jogador 1 (setas)
+      const keys1 = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
+      if (keys1.includes(e.key) && !dir1Locked.current) {
+        const dir = e.key.replace("Arrow", "").toUpperCase() as "UP" | "DOWN" | "LEFT" | "RIGHT";
+        if (dir !== opposite[dir1Ref.current]) {
+          dir1Ref.current = dir;
+          setDir1(dir);
+          dir1Locked.current = true; // bloqueia até o próximo tick
+        }
+      }
 
-    // Jogador 2 (w/a/s/d) -> somente multiplayer
-    if (mode === "multiplayer") {
-      const map2: Record<string, "UP" | "DOWN" | "LEFT" | "RIGHT"> = {
-        w: "UP",
-        s: "DOWN",
-        a: "LEFT",
-        d: "RIGHT",
-      };
-      const next = map2[e.key.toLowerCase()];
-      if (next && next !== opposite[dir2]) setDir2(next);
-    }
-  };
+      // Jogador 2 (w/a/s/d)
+      if (mode === "multiplayer" && !dir2Locked.current) {
+        const map2: Record<string, "UP" | "DOWN" | "LEFT" | "RIGHT"> = {
+          w: "UP",
+          s: "DOWN",
+          a: "LEFT",
+          d: "RIGHT",
+        };
+        const next = map2[e.key.toLowerCase()];
+        if (next && next !== opposite[dir2Ref.current]) {
+          dir2Ref.current = next;
+          setDir2(next);
+          dir2Locked.current = true; // bloqueia até o próximo tick
+        }
+      }
+    };
 
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [gameState, mode, dir1, dir2]);
+  }, [gameState, mode]);
 
   const resetGame = () => {
     setSnake1([
@@ -104,12 +117,16 @@ export default function GameCanvas({
     ]);
     setDir1("RIGHT");
     setDir2("LEFT");
+    dir1Ref.current = "RIGHT";
+    dir2Ref.current = "LEFT";
     setFood(randomPosition(gridSize, [snake1, snake2]));
     setScore1(0);
     setScore2(0);
     setWinner(null);
     setCountdown(3);
     setGameState("ready");
+    dir1Locked.current = false;
+    dir2Locked.current = false;
   };
 
   // Função para iniciar o jogo com contador
@@ -169,6 +186,10 @@ export default function GameCanvas({
       setSnake1(newSnake1);
       setSnake2(newSnake2);
       setFood(newFood);
+
+      // Desbloqueia os inputs após o movimento
+      dir1Locked.current = false;
+      dir2Locked.current = false;
 
       // Colisões
       if (checkCollision(newSnake1, gridSize)) {
