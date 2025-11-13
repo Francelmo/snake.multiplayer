@@ -10,7 +10,7 @@ Desenvolvido com **Next.js** e estilizado com **Tailwind CSS**, o projeto traz u
 ---
 
 ## 🚀 Demonstração
-[Snake Multiplayer no Vercel](https://snake-multiplayer.vercel.app)
+[Snake Multiplayer no Vercel](https://snake-multiplayer-io.vercel.app)
 
 ---
 
